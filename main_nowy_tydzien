@@ -1,0 +1,88 @@
+"""
+src/main.py
+Główny interfejs konsolowy (CLI) dla projektu CineStream (Architektura Obiektowa).
+"""
+
+from src.storage import load_watchlist, atomic_save_watchlist, export_watchlist_to_csv
+from src.models import MediaTitle
+
+
+def display_menu() -> None:
+    print("\n==============================")
+    print("      CINESTREAM - MENU       ")
+    print("==============================")
+    print("1. Wyświetl listę filmów")
+    print("2. Dodaj nowy film")
+    print("3. Posortuj filmy (wg oceny)")
+    print("4. Eksportuj do CSV")
+    print("5. Wyjdź")
+
+
+def main() -> None:
+    # Załadowanie agregatu Watchlist ze storage (zamiast plaskiej listy słowników)
+    watchlist = load_watchlist()
+    
+    running = True
+    while running:
+        display_menu()
+        choice = input("\nWybierz opcję (1-5): ").strip()
+        
+        if choice == "1":
+            print(f"\n{watchlist}")
+            
+        elif choice == "2":
+            try:
+                print("\n--- DODAWANIE NOWEGO FILMU ---")
+                title_id = int(input("ID filmu (np. 4): "))
+                title = input("Tytuł: ").strip()
+                year = int(input("Rok produkcji: "))
+                genre = input("Gatunek: ").strip()
+                duration = int(input("Czas trwania (min): "))
+                
+                watched_input = input("Czy obejrzany? (t/n): ").strip().lower()
+                is_watched = True if watched_input == 't' else False
+                
+                if is_watched:
+                    rating = float(input("Ocena (1.0 - 10.0): "))
+                else:
+                    rating = 0.0
+                    print("Film nieobejrzany – ocena ustawiona automatycznie na 0.0.")
+
+                # Tworzymy obiekt encji (zwaliduje niezmienniki)
+                new_movie = MediaTitle(
+                    title_id=title_id,
+                    title=title,
+                    year=year,
+                    rating=rating,
+                    genre=genre,
+                    is_watched=is_watched,
+                    duration_min=duration
+                )
+                
+                watchlist.add_item(new_movie)
+                atomic_save_watchlist(watchlist)  # Zapis atomowy obiektu
+                print("[SUKCES] Film został dodany i zapisany w bazie!")
+                
+            except (ValueError, TypeError) as e:
+                print(f"\n[BŁĄD WALIDACJI] Nie udało się dodać filmu: {e}")
+                
+        elif choice == "3":
+            # Wykorzystujemy protokół __lt__ zdefiniowany w klasie MediaTitle do sortowania malejącego
+            sorted_items = sorted(watchlist.items)
+            print("\n=== FILMY POSORTOWANE WG OCENY (MALEJĄCO) ===")
+            for item in sorted_items:
+                print(f"  * {item}")
+                
+        elif choice == "4":
+            count = export_watchlist_to_csv(watchlist)
+            print(f"\n[SUKCES] Wyeksportowano {count} filmów do folderu exports/watchlist.csv!")
+            
+        elif choice == "5":
+            print("\nDziękujemy za korzystanie z CineStream. Do zobaczenia!")
+            running = False
+        else:
+            print("\n[BŁĄD] Nieznana opcja. Wybierz liczbę od 1 do 5.")
+
+
+if __name__ == "__main__":
+    main()
