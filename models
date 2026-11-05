@@ -1,0 +1,146 @@
+"""
+src/models.py
+Modele domenowe dla projektu CineStream: encja MediaTitle oraz agregat Watchlist.
+"""
+
+from __future__ import annotations
+from typing import Any, Self
+
+
+class MediaTitle:
+    """Encja domenowa reprezentująca pojedynczy tytuł multimedialny."""
+
+    def __init__(
+        self,
+        title_id: int,
+        title: str,
+        year: int,
+        rating: float,
+        genre: str,
+        is_watched: bool,
+        duration_min: int
+    ) -> None:
+        self.title_id: int = title_id
+        self.title: str = title
+        self.year: int = year
+        self.genre: str = genre
+        self.is_watched: bool = is_watched
+        self.duration_min: int = duration_min
+        
+        # Wywołanie settera walidującego niezmiennik
+        self.rating: float = rating
+
+    @property
+    def rating(self) -> float:
+        return self._rating
+
+    @rating.setter
+    def rating(self, value: float) -> None:
+        """Niezmiennik relacyjny: ocena (1.0-10.0) tylko gdy is_watched == True."""
+        if not isinstance(value, (int, float)):
+            raise TypeError("Ocena musi być liczbą.")
+        
+        float_val = float(value)
+        
+        if float_val > 0.0 and not self.is_watched:
+            raise ValueError("Nie można ocenić filmu, który nie został jeszcze obejrzany (is_watched = False).")
+        
+        if not (0.0 <= float_val <= 10.0):
+            raise ValueError(f"Ocena musi mieścić się w przedziale 1.0 - 10.0 (podano: {float_val}).")
+            
+        self._rating = round(float_val, 1)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serializuje encję do słownika."""
+        return {
+            "title_id": self.title_id,
+            "title": self.title,
+            "year": self.year,
+            "rating": self.rating,
+            "genre": self.genre,
+            "is_watched": self.is_watched,
+            "duration_min": self.duration_min
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        """Rekonstruuje encję ze słownika."""
+        return cls(
+            title_id=int(data["title_id"]),
+            title=str(data["title"]),
+            year=int(data["year"]),
+            rating=float(data.get("rating", 0.0)),
+            genre=str(data["genre"]),
+            is_watched=bool(data["is_watched"]),
+            duration_min=int(data["duration_min"])
+        )
+
+    def __eq__(self, other: object) -> bool:
+        """Tożsamość domenowa: dwa tytuły są równe, gdy mają ten sam identyfikator."""
+        if not isinstance(other, MediaTitle):
+            return False
+        return self.title_id == other.title_id
+
+    def __lt__(self, other: MediaTitle) -> bool:
+        """Naturalny porządek sortowania dla Zespołu 1: malejąco po ocenie[cite: 9]."""
+        if not isinstance(other, MediaTitle):
+            return NotImplemented
+        return self.rating > other.rating
+
+    def __repr__(self) -> str:
+        return f"MediaTitle(title_id={self.title_id}, title={self.title!r}, rating={self.rating}, is_watched={self.is_watched})"
+
+    def __str__(self) -> str:
+        status_str = "[V]" if self.is_watched else "[ ]"
+        return f"{status_str} ID:{self.title_id:02d} | {self.title:<20} ({self.year}) | Ocena: {self.rating}/10 | Czas: {self.duration_min} min"
+
+
+class Watchlist:
+    """Agregat zarządzający kolekcją tytułów multimedialnych (relacja 1:N)[cite: 9]."""
+
+    def __init__(self, watchlist_id: int, name: str, items: list[MediaTitle] | None = None) -> None:
+        self.watchlist_id: int = watchlist_id
+        self.name: str = name
+        self._items: list[MediaTitle] = list(items) if items is not None else []
+
+    @property
+    def items(self) -> list[MediaTitle]:
+        """Zwraca bezpieczną kopię listy, chroniąc stan przed bezpośrednią modyfikacją."""
+        return list(self._items)
+
+    def add_item(self, item: MediaTitle) -> None:
+        """Dodaje pozycję do listy z kontrolą typu."""
+        if not isinstance(item, MediaTitle):
+            raise TypeError("W liście Watchlist można umieszczać wyłącznie instancje MediaTitle.")
+        if item not in self._items:
+            self._items.append(item)
+
+    def total_runtime_hours(self) -> float:
+        """Wylicza łączny czas trwania wszystkich filmów na liście w godzinach[cite: 9]."""
+        total_mins = sum(item.duration_min for item in self._items)
+        return round(total_mins / 60.0, 2)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Zagnieżdżona serializacja agregatu do słownika[cite: 7]."""
+        return {
+            "watchlist_id": self.watchlist_id,
+            "name": self.name,
+            "items": [item.to_dict() for item in self._items]
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        """Zagnieżdżona rekonstrukcja agregatu z surowego JSON[cite: 7]."""
+        restored_items = [MediaTitle.from_dict(raw) for raw in data.get("items", [])]
+        return cls(
+            watchlist_id=int(data["watchlist_id"]),
+            name=str(data["name"]),
+            items=restored_items
+        )
+
+    def __str__(self) -> str:
+        lines = [f"=== WATCHLIST: {self.name} (ID: {self.watchlist_id}) ==="]
+        for item in self._items:
+            lines.append(f"  * {item}")
+        lines.append(f" ŁĄCZNY CZAS SEANSÓW: {self.total_runtime_hours()} h")
+        return "\n".join(lines)
