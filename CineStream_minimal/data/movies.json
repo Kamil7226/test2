@@ -1,0 +1,67 @@
+{
+    "watchlist_id": 1,
+    "titles": [
+        {
+            "title_id": 1,
+            "title": "Incepcja",
+            "year": 2010,
+            "rating": 8.8,
+            "genre": "Sci-Fi",
+            "is_watched": true,
+            "duration_min": 120
+        },
+        {
+            "title_id": 2,
+            "title": "Skazani na Shawshank",
+            "year": 1994,
+            "rating": 9.3,
+            "genre": "Dramat",
+            "is_watched": true,
+            "duration_min": 120
+        },
+        {
+            "title_id": 3,
+            "title": "Interstellar",
+            "year": 2014,
+            "rating": 8.7,
+            "genre": "Sci-Fi",
+            "is_watched": true,
+            "duration_min": 120
+        },
+        {
+            "title_id": 4,
+            "title": "Shrek",
+            "year": 2001,
+            "rating": 7.8,
+            "genre": "animacja",
+            "is_watched": true,
+            "duration_min": 120
+        },
+        {
+            "title_id": 5,
+            "title": "Shrek 2",
+            "year": 2004,
+            "rating": 7.5,
+            "genre": "animacja",
+            "is_watched": true,
+            "duration_min": 120
+        },
+        {
+            "title_id": 6,
+            "title": "Odyseja",
+            "year": 2026,
+            "rating": 7.7,
+            "genre": "Dramat",
+            "is_watched": true,
+            "duration_min": 120
+        }
+    ],
+    "platforms": {
+        "1": "Netflix",
+        "2": "HBO Max",
+        "3": "Disney+",
+        "4": "ShySkowTime",
+        "5": "ShySkowTime",
+        "6": "W kinach"
+    }
+}
