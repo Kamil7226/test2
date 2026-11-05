@@ -1,0 +1,90 @@
+"""
+tests/test_models.py
+Skrypt autotestów weryfikujący poprawność modeli obiektowych, niezmienników i serializacji[cite: 12].
+Uruchomienie w terminalu: python tests/test_models.py[cite: 12]
+"""
+
+import sys
+from pathlib import Path
+
+# Dodanie katalogu głównego do ścieżki Pythona
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from src.models import MediaTitle, Watchlist
+
+
+def test_instantiation_and_invariants() -> None:
+    print("-> Test 1: Poprawne instancjonowanie i niezmienniki biznesowe...")
+    
+    # Poprawny film obejrzany z oceną
+    movie1 = MediaTitle(1, "Incepcja", 2010, 8.8, "Sci-Fi", True, 148)
+    assert movie1.rating == 8.8
+    assert movie1.is_watched is True
+
+    # Test naruszenia niezmiennika: próba oceny filmu nieobejrzanego musi rzucić ValueError
+    try:
+        MediaTitle(2, "Avatar 3", 2026, 9.0, "Sci-Fi", False, 190)
+        assert False, "Oczekiwano wyjątku ValueError przy próbie oceny nieobejrzanego filmu!"
+    except ValueError as e:
+        print(f"   [OK] Poprawnie wychwycono błąd niezmiennika: {e}")
+
+    print("Test 1 zaliczony pomyślnie!\n")
+
+
+def test_sorting_protocol() -> None:
+    print("-> Test 2: Protokół porównań (__lt__) dla sortowania...")
+    
+    m1 = MediaTitle(1, "Film A", 2020, 7.0, "Dramat", True, 100)
+    m2 = MediaTitle(2, "Film B", 2021, 9.5, "Dramat", True, 120)
+    m3 = MediaTitle(3, "Film C", 2022, 8.0, "Dramat", True, 90)
+
+    watchlist = Watchlist(1, "Ulubione")
+    watchlist.add_item(m1)
+    watchlist.add_item(m2)
+    watchlist.add_item(m3)
+
+    # Sortowanie listy za pomocą wbudowanej metody .sort() lub sorted() korzystającej z __lt__
+    sorted_items = sorted(watchlist.items)
+    
+    assert sorted_items[0].rating == 9.5, "Najwyższa ocena powinna być na początku!"
+    assert sorted_items[2].rating == 7.0, "Najniższa ocena powinna być na końcu!"
+    print("   [OK] Sortowanie malejące wg oceny działa prawidłowo.")
+    print("Test 2 zaliczony pomyślnie!\n")
+
+
+def test_round_trip_serialization() -> None:
+    print("-> Test 3: Round-Trip Serialization (to_dict / from_dict)...")
+    
+    original_item = MediaTitle(10, "Matrix", 1999, 8.7, "Action", True, 136)
+    original_watchlist = Watchlist(5, "Sci-Fi Classic", [original_item])
+
+    # Serializacja do słownika i rekonstrukcja
+    data = original_watchlist.to_dict()
+    restored_watchlist = Watchlist.from_dict(data)
+
+    assert original_watchlist.watchlist_id == restored_watchlist.watchlist_id
+    assert original_watchlist.name == restored_watchlist.name
+    assert len(restored_watchlist.items) == 1
+    
+    restored_item = restored_watchlist.items[0]
+    assert restored_item.title_id == original_item.title_id
+    assert restored_item.title == original_item.title
+    assert restored_item.rating == original_item.rating
+    
+    print("   [OK] Obiekt zserializowany i odtworzony są identyczne.")
+    print("Test 3 zaliczony pomyślnie!\n")
+
+
+if __name__ == "__main__":
+    print("==========================================")
+    print(" URUCHAMIANIE AUTOTESTÓW DLA CINESTREAM (Lab 3.1)")
+    print("==========================================\n")
+    
+    try:
+        test_instantiation_and_invariants()
+        test_sorting_protocol()
+        test_round_trip_serialization()
+        print("Wszystkie testy zakończyły się PEŁNYM SUKCESEM!")
+    except AssertionError as ae:
+        print(f"\n[BŁĄD AUTOTESTU]: {ae}")
+        sys.exit(1)
