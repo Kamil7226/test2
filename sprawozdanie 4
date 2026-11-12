@@ -1,0 +1,92 @@
+# Sprawozdanie z Zadania Laboratoryjnego 3.2
+
+**Przedmiot:** Programowanie w języku Python (`IwIK-S1`)  
+**Projekt:** CineStream  
+**Zespół (Autorzy):**
+1. Kamil Kapustka (nr albumu: 164836) – login Git: `Kamil7226`
+2. Oliwier Skubida (nr albumu: 159197) – login Git: `OliwierSkubida`
+
+**Data oddania:** [do uzupełnienia]
+
+---
+
+## 1. Cel i Zakres Inżynierski Zadania
+
+Celem zadania było rozbudowanie projektu CineStream o dziedziczenie i polimorfizm. Zmieniliśmy klasę `MediaTitle` na klasę abstrakcyjną oraz dodaliśmy klasy `Movie` i `Series`, dzięki którym program obsługuje filmy i seriale. Dodaliśmy również `MediaCatalogManager`, który zarządza katalogiem i oblicza łączny czas oglądania oraz wagę odtwarzania.
+
+---
+
+## 2. Architektura Rozwiązania i Struktura Modułów
+
+- `src/models.py` – zawiera abstrakcyjną klasę `MediaTitle` oraz klasy `Movie` i `Series`.
+- `src/manager.py` – zarządza katalogiem filmów i seriali, oblicza czas oglądania i statystyki.
+- `src/data.py` – przechowuje początkową bazę filmów i seriali.
+- `src/validators.py` – sprawdza poprawność danych wprowadzanych przez użytkownika.
+- `src/services.py` – odpowiada za dodawanie, wyświetlanie i filtrowanie filmów oraz seriali.
+- `src/main.py` – główne menu programu, za pomocą którego użytkownik wybiera operacje.
+- `src/storage.py` – zapis i odczyt JSON, eksport CSV oraz kopie zapasowe.
+- `src/test_manager.py` – testy dziedziczenia, polimorfizmu i obsługi błędów.
+
+---
+
+## 3. Kluczowy Fragment Kodu i Uzasadnienie Inżynierskie
+
+```python
+def total_playback_weight(self) -> float:
+    return round(
+        sum(
+            item.calculate_playback_weight()
+            for item in self._titles
+        ),
+        2
+    )
+```
+
+**Uzasadnienie wyboru:**
+
+Wybraliśmy ten fragment, ponieważ pokazuje działanie polimorfizmu. Program wywołuje tę samą metodę `calculate_playback_weight()` dla filmu i serialu, ale każda klasa oblicza wagę w inny sposób. Dzięki temu nie musimy sprawdzać, czy dany obiekt jest filmem, czy serialem.
+
+---
+
+## 4. Scenariusze Weryfikacji i Wyniki Testów
+
+### Scenariusz A: Ścieżka poprawna (Happy Path)
+
+**Dane wejściowe:** Film trwający 120 minut z premierą kinową oraz serial mający 2 sezony po 5 odcinków trwających 30 minut.
+
+**Oczekiwany wynik:**
+
+```text
+Waga filmu: 2.2
+Waga serialu: 5.25
+Łączny czas oglądania: 420 minut
+Łączna waga odtwarzania: 7.45
+```
+
+### Scenariusz B: Obsługa błędów i wartości brzegowych
+
+**Dane wejściowe (błędne):** Próba dodania dwóch tytułów z takim samym ID.
+
+**Oczekiwana reakcja programu:**
+
+```text
+ValueError: ID już istnieje.
+```
+
+Program nie pozwala dodać dwóch obiektów o takim samym identyfikatorze.
+
+---
+
+## 5. Podział Pracy w Zespole
+
+**Kamil Kapustka:**
+- Odpowiedzialność za moduły: `src/main.py`, `src/services.py`, `src/test_manager.py`.
+- Rozbudowanie menu o obsługę filmów i seriali.
+- Dodanie menedżera katalogu, obliczania czasu oglądania i statystyk.
+- Liczba wykonanych commitów: [do uzupełnienia].
+
+**Oliwier Skubida:**
+- Odpowiedzialność za moduły: `src/models.py`, `src/data.py`, `src/storage.py`, `src/validators.py`, `src/manager.py`.
+- Utworzenie klas `Movie` i `Series` oraz abstrakcyjnej klasy `MediaTitle`.
+- Dodanie polimorfizmu, obsługi typów obiektów w JSON oraz testów automatycznych.
+- Liczba wykonanych commitów: [do uzupełnienia].
