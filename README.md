@@ -31,3 +31,8 @@ Kopie zapasowe JSON są zapisywane w data/backups.
 Uwaga:
 To jest kompletna, działająca wersja projektu oparta na klasach OOP.
 Dotychczasowy katalog filmów został przeniesiony do modelu MediaTitle.
+@property
+def classification(self) -> str:
+    if self.rating is None:
+        return "NIEOCENIONY"
+    return "HIT" if self.rating > 9.0 else "STANDARD"
